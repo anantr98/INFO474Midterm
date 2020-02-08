@@ -1,0 +1,240 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <style>
+        .square {
+            height:20px;
+            width:20px;
+        }
+        .contains {
+            width:100%;
+            padding:0;
+        }
+    </style>
+    <title>Midterm</title>
+</head>
+<body>
+    <h3>Pokemon: Special Defense vs Total Stats</h3>
+    <script src='https://d3js.org/d3.v4.min.js'></script>    
+    <div id="PokemonViz"></div>
+
+    <script>  
+        var margin = {top: 10, right: 30, bottom: 20, left: 40},
+                        width = 550 - margin.left - margin.right,
+                        height = 600 - margin.top - margin.bottom;
+
+        var svg = d3.select("#PokemonViz")
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                    const generations = [1,2,3,4,5,6]
+                    const legendary = ['All','True', 'False']
+
+        let filter1 = d3.select('body')    
+        .append('select')    
+        .attr('id', 'filterOne')
+        .selectAll('option')        
+        .data(legendary)    
+        .enter()        
+        .append('option')        
+        .attr('value', function(d) { return d })        
+            .html(function(d) { return d })
+
+        let filter2 = d3.select('body')    
+        .append('select')  
+        .attr('id', 'filterTwo')     
+        .selectAll('option')    
+        .data(generations)    
+        .enter()          
+        .append('option')          
+        .html(function(d) { return d })          
+        .attr('value', function(d) { return d })
+
+        console.log(filter1)
+
+                const colors2 = {
+                "Bug": "#4E79A7",
+                "Dark": "#A0CBE8",
+                "Electric": "#F28E2B",
+                "Fairy": "#FFBE7D",
+                "Fighting": "#59A14F",
+                "Fire": "#8CD17D",
+                "Ghost": "#B6992D",
+                "Grass": "#499894",
+                "Ground": "#86BCB6",
+                "Ice": "#FABFD2",
+                "Normal": "#E15759",
+                "Poison": "#FF9D9A",
+                "Psychic": "#79706E",
+                "Steel": "#BAB0AC",
+                "Water": "#D37295"
+                }
+
+        d3.csv('pokemon.csv', function(data) {
+
+            var x = d3.scaleLinear()
+                    .domain([0, 200])
+                    .range([ 0, width ]);
+
+            svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+
+            var y = d3.scaleLinear()
+                    .domain([100, 900])
+                    .range([ height, 0]);
+
+            svg.append("g")
+                    .call(d3.axisLeft(y));
+
+
+            var tooltip = d3.select("#PokemonViz")
+                .append("div")
+                .style("opacity", 0)
+                .attr("class", "tooltip")
+                .style("background-color", "blue")
+                .style("border-color", "black")
+                .style("border", "5px")
+                .style("padding", "0.2rem")
+                .style("color", "white")
+                .style("align", "center")
+                .style("position", "absolute")
+                .style('pointer-events', 'none')
+                .style('text-align', 'left')
+                .style('box-shadow', '1px 1px 2px 2px #888888')
+                .style('height', '80px')
+                .style('width', '150px')
+                .style('font', '14px sans-serif')
+
+
+            var showTooltip = function(d) {
+                tooltip
+                .transition()
+                .duration(200)
+                tooltip
+                .style("opacity", 1)
+                .html("Name: " + d.Name + "</br>" +
+                " Type 1: " + d.Type1 + "</br>" +
+                " Type 2: " + d.Type2) 
+                .style("right", (d3.mouse(this)[0]+30) + "px")
+                .style("bottom", (d3.mouse(this)[1]+30) + "px")
+            }
+
+            var hideTooltip = function(d) {
+                tooltip
+                .transition()
+                .duration(200)
+                .style("opacity", 0)
+            }
+            
+            d3.select('#filterOne').on("change", function() {
+                var e = document.getElementById("filterOne")
+                var selectedOption = e.options[e.selectedIndex].value;
+                console.log(selectedOption);
+                d3.selectAll('circle').attr('display', 'inline')
+                d3.selectAll('circle').filter(function(d){
+                    if (selectedOption=='All') {
+                        return false;
+                    }
+                    console.log((d.Legendary == selectedOption))
+                    return d.Legendary.toLowerCase() != selectedOption.toLowerCase();
+                }).attr('display','none')
+            })
+
+            d3.select('#filterTwo').on("change", function() {
+                var f = document.getElementById("filterTwo")
+                var selectedOption2 = f.options[f.selectedIndex].value;
+                console.log(selectedOption2);
+                d3.selectAll('circle').attr('display','inline')
+                d3.selectAll('circle').filter(function(d) {
+                    return d.Generation != selectedOption2;
+                }).attr('display','none')
+            })
+
+            svg.append('g')
+                    .selectAll("dot")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", function (d) { return x(d.SpAtk); } )
+                    .attr("cy", function (d) { return y(d.Total); } )
+                    .attr("r", 5)
+                    .style("fill", function(d) {
+                        let type = d['Type1']
+                        return colors2[type];
+                    })
+                    .on('mouseover', showTooltip)
+                    .on('mouseleave', hideTooltip)
+
+});
+    </script>
+        <div class='contains'>
+            <div class="move">
+                <div class="square" style="background-color: #4E79A7"></div>
+                <p>Bug</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #A0CBE8""></div>
+                <p>Dark</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #F28E2B"></div>
+                <p>Electric</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #FFBE7D"></div>
+                <p>Fairy</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #59A14F"></div>
+                <p>Fighting</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #8CD17D"></div>
+                <p>Fire</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #B6992D"></div>
+                <p>Ghost</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #499894"></div>
+                <p>Grass</p>
+            </div>
+            <div class="move">
+                <div class="square" style="background-color: #86BCB6"></div>
+                <p>Ground</p>
+            </div>     
+            <div class="move">
+                <div class="square" style="background-color: #FABFD2"></div>
+                <p>Ice</p>
+            </div>    
+            <div class="move">
+                <div class="square" style="background-color: #E15759"></div>
+                <p>Normal</p>
+            </div>    
+            <div class="move">
+                <div class="square" style="background-color: #FF9D9A"></div>
+                <p>Poison</p>
+            </div>    
+            <div class="move">
+                <div class="square" style="background-color: #79706E"></div>
+                <p>Psychic</p>
+            </div>    
+            <div class="move">
+                <div class="square" style="background-color: #BAB0AC"></div>
+                <p>Steel</p>
+            </div>    
+            <div class="move">
+                <div class="square" style="background-color: #D37295"></div>
+                <p>Water</p>
+            </div>
+        </div>
+    
+</body>
+</html>
